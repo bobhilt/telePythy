@@ -6,7 +6,6 @@
 # [yellow orange red purple pink blue green silver white] - Standard or chosen constants for each color.
 # [A..R] [1..18]
 # - 1-Player game
-#     - Get name
 #     - Randomly select target square
 #     - Render Board
 #     - Offer player a chance to guess or solve
@@ -21,10 +20,10 @@
 #         - If player is solving, congratulate player and end game if correct, or show solution and wah-wah if incorrect.
 
 
-CELL_STATE_EXCLUDED = 0
-CELL_STATE_INCLUDED = 1
-CELL_STATE_UNKNOWN = 2
-CELL_STATE_ANSWER = 4
+from enum import Enum
+CELL_STATE = Enum('CELL_STATE', 'No Yes Unknown Correct')
+
+# ToDo: Refactor opportunity- any advantage to making colors and shaps some sort of Enums as well?
 
 class Colors(dict):
     # for now, key - value.  value should be object to have color value, shaded value, highlighted value
@@ -39,7 +38,7 @@ class Shapes(dict):
 class Cell:
     # row, col, color, shape, state
 
-    def __init__(self, row ,col, color, shape, state = CELL_STATE_UNKNOWN):
+    def __init__(self, row ,col, color, shape, state = CELL_STATE.Unknown):
         if color not in  Colors().colors:
             raise ValueError("Color '" + color + "'is not valid.")
 
@@ -50,13 +49,15 @@ class Cell:
         self.col = col
         self.color = color
         self.shape = shape
-        self.state = CELL_STATE_UNKNOWN
-        
+        self.state = state
+
+    def state_desc(self):
+        return CELL_STATE        
     def __str__(self):
-        return self.row + str(self.col) + ', ' + self.color + ' ' + self.shape + ' state = ' + self.state
-    
+        # return self.row + str(self.col) + ', ' + self.color + ' ' + self.shape + ' state = ' + str(self.state)
+        return 'Cell: "%s%s: %s %s %s' % (self.row, str(self.col), self.color, self.shape, str(self.state))
     def __repr__(self):
-        return 'Cell(row=%s, col=%s, color=%s, shape=%s, state=%s)' % (self.row, self.col, self.color, self.shape, self.shape)        
+        return 'Cell(row="%s", col=%s, color="%s", shape="%s", state=%s)' % (self.row, self.col, self.color, self.shape, self.shape)        
 
 class Board:
     _board_size = 18
@@ -89,7 +90,14 @@ import unittest
 
 class TestGameStartup(unittest.TestCase):
     
-    
+    def test_cell_state_descriptions_are_enumerated(self):
+        self.assertEqual(CELL_STATE.No.value, 1)
+        self.assertEqual(CELL_STATE.Yes.value, 2)
+        self.assertEqual(CELL_STATE.Unknown.value, 3)
+        self.assertEqual(CELL_STATE.Correct.value, 4)
+    def test_have_4_cell_states(self):
+        self.assertEqual(len(CELL_STATE), 4)
+        
     def test_board_board_is_18_square(self):
         board = Board()
         self.assertEqual(18,board.size())
@@ -113,7 +121,7 @@ class TestGameStartup(unittest.TestCase):
     def test_9_shapes(self):
         
         for shape in ['sun', 'star', 'eye', 'moon', 'circle', 'bolt', 'diamond', 'hand', 'heart']:
-            self.assertIn(shape,Board().shapes)
+            self.assertIn(shape,Board().shapes, shape)
 
     def test_board_has_equal_numbers_of_each_combo(self):
         b = Board()
