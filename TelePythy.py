@@ -116,11 +116,14 @@ class Game:
         self.board = Board()
         self._answer = None
         self._guesses = list()
-        
+    
+    def get_cell_index(self, row, col):
+        return (ord(row) - ord('A')) * self.board.size() + (col - 1) # board columns are 1-based
+    
     def _set_answer(self, row, col):
         if self._answer is not None:
             self._answer.state = CELL_STATE.Unknown
-        ndx = (ord(row) - ord('A')) * self.board.size() + (col - 1) # board columns are 1-based
+        ndx = self.get_cell_index(row, col)
         self._answer = self.board.cells[ndx]
         self.board.cells[ndx].state = CELL_STATE.Correct
 
@@ -129,12 +132,12 @@ class Game:
         if self._answer is None:
             # what to do here? Assign a random cell?
             raise AttributeError('Cannot guess until answer is set')
-        ndx = (ord(row) - ord('A')) * self.board.size() + col-1
+        ndx = self.get_cell_index(row, col)
         cell = self.board.cells[ndx]
         if (cell.color != color) or (cell.shape != shape):
             raise ValueError('Error in cell values. Did you mean ' + cell.color + ' ' + cell.shape + '?')
+
         a = self._answer # just to save typing
-        # board  col is 1-based
         self._guesses.append(cell)
         if try_solve:
             return a is cell
@@ -174,7 +177,7 @@ class TestGameStartup(unittest.TestCase):
         board = Board()
         self.assertEqual(18,board.size())
     
-    def test_game_has_a_boad(self):
+    def test_game_has_a_board(self):
         game = Game()
         self.assertIsInstance(game.board,Board)
         
@@ -248,13 +251,13 @@ class TestGamePlay(unittest.TestCase):
     def test_try_solve_compares_guess_to_set_answer(self):
         game = Game()
         game._set_answer('R',18) # R18 red sun
-        self.assertTrue(game.guess('R',18,'red','sun')[0])        
-        self.assertFalse(game.guess('R',6,'pink','heart')[0])
+        self.assertTrue(game.guess('R',18,'red','sun',True))        
+        self.assertFalse(game.guess('R',6,'pink','heart', True))
         
 # Render board
-    def test_cell_has_color_background(self):
+    def test_get_cell_data_returns_correct_values(self):
         game = Game()
-        self.assertEqual(get_cell_string(0),('B',5))
+        self.assertEqual(game.get_cell_data(0),('blue', 'bolt',CELL_STATE.Unknown))
         
 if __name__ == '__main__':
     unittest.main()

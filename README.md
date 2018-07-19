@@ -27,7 +27,7 @@ Ultimately, game will show cells graphically, with optional highlighting of elim
 Complete guess logic
 
 * Track all guesses - Done
-* Set cell statuses with each guess - Done
+* Set cell statuses with each guess - In Progress
 * Provide verbose feedback, e.g., Your guess eliminated n cells, with m remaining. - better
 * Provide list of eliminated cells.
 * Provide view by row, column, color, shape, shape + color of eliminated or included cells, with counts.  
