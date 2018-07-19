@@ -151,6 +151,11 @@ class Game:
         # ToDo: return richer results
     def guesses(self):
         return self._guesses
+    
+    def get_cell_data(self, cell_index):
+        # print("\033[1;32;43m Bright Green \n")
+        cell = self.board.cells[cell_index]
+        return (cell.color, cell.shape, cell.state)
         
 import unittest
 
@@ -240,11 +245,16 @@ class TestGamePlay(unittest.TestCase):
         self.assertEqual(len(game.guesses()),2)
         self.assertEqual(game.guesses()[1].color, game.board.colors['pink'])
         
-    def try_solve_compares_guess_to_set_answer(self):
+    def test_try_solve_compares_guess_to_set_answer(self):
         game = Game()
         game._set_answer('R',18) # R18 red sun
         self.assertTrue(game.guess('R',18,'red','sun')[0])        
         self.assertFalse(game.guess('R',6,'pink','heart')[0])
+        
+# Render board
+    def test_cell_has_color_background(self):
+        game = Game()
+        self.assertEqual(get_cell_string(0),('B',5))
         
 if __name__ == '__main__':
     unittest.main()

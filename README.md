@@ -14,6 +14,9 @@ Response is either "Yes" (some attribute (row, column, color or shape) of the gu
 
 Player has one opportunity to choose "solve" and provide their final conclusion.
 
+Original game board (for point of reference only): 
+![alt text](./game_board_original_telepathy.jpg "Example Game Board")
+
 
 ### Implementation: 
 With each guess, game tracks eliminated or potentially included cells. Building game logic before working on rendering and presentation.
@@ -23,8 +26,8 @@ Ultimately, game will show cells graphically, with optional highlighting of elim
 ### Next:
 Complete guess logic
 
-* Track all guesses
-* Set cell statuses with each guess
-* Provide verbose feedback, e.g., Your guess eliminated n cells, with m remaining.
+* Track all guesses - Done
+* Set cell statuses with each guess - Done
+* Provide verbose feedback, e.g., Your guess eliminated n cells, with m remaining. - better
 * Provide list of eliminated cells.
-* Provide view by row, column, color, shape, shape + color of eliminated or included cells, with counts.
+* Provide view by row, column, color, shape, shape + color of eliminated or included cells, with counts.  
