@@ -1,5 +1,8 @@
 """
 # telepathy_game
+ Author: Bob Hiltner
+ May, 2018
+ 
  Development Steps:
 
  - Draw board
@@ -78,37 +81,53 @@ class Board:
     
     def __init__(self):
         self._grid = [[[] for y in range(self._board_size)] for  x in range(self._board_size)]
+        # Each cell will hold its state, and each trait will be tracked separetly
         self.eliminated =  {'rows': [], 'cols': [], 'colors' : [], 'shapes': []}
         self.retained =  {'rows': [], 'cols': [], 'colors' : [], 'shapes': []}
     
     def size(self):
         return self._board_size
     
-    def update_cell_statuses(self,cell,answer_true):
-        if not answer_true:
-            prior_eliminated = len([cell for cell in self.cells 
-                                   if cell.state == CELL_STATE.Eliminated])
-            # ToDo: test this for color, then follow for other attributes.
-            if cell.color not in self.eliminated['colors']:
-                # add to eliminated and set all relevant cell states to 
-                if cell.color in self.retained['colors']:
-                    self.retained['colors'].remove(cell.color)
-                self.eliminated['colors'].append(cell.color)
-                for c in self.cells:
-                    if c.color == cell.color:
-                        c.state = CELL_STATE.Eliminated
+    def update_cells(self, trait, trait_desc, status):
+        #ToDo: is there a cleaner way to do this? (maybe refactor to use sets?)
+        for c in self.cells: 
+            if  ((trait_desc == 'colors' and c.color == trait) or 
+                (trait_desc == 'shapes'and c.shape == trait) or
+                (trait_desc == 'rows' and c.row == trait) or
+                (trait_desc == 'cols' and c.col == trait)):
+                    if c.state != CELL_STATE.Eliminated: #Final state--don't update
+                        c.state = status
+            elif trait_desc not in ('colors', 'shapes', 'rows', 'cols'):
+                 raise AttributeError('Invalid trait_desc: ' + trait_desc)
+                    
+    def update_board_state(self,cell, guess_matches_traits):
+
+        prior_eliminated = len([cell for cell in self.cells 
+                               if cell.state == CELL_STATE.Eliminated])
+
+        prior_retained = len([cell for cell in self.cells 
+                           if cell.state == CELL_STATE.Retained])
+
+        for (trait, trait_desc) in [(cell.color, 'colors'), (cell.shape, 'shapes'), (cell.row, 'rows'), (cell.col, 'cols')]:
+            if not guess_matches_traits:
+                if trait not in self.eliminated[trait_desc]:
+                    # add trait to eliminated list and set all relevant cell states to eliminated.
+                    if trait in self.retained[trait_desc]:
+                        self.retained[trait_desc].remove(trait)
+                    self.eliminated[trait_desc].append(trait)
+                    
+                    self.update_cells(trait, trait_desc, CELL_STATE.Eliminated)
+                    post_eliminated = len([cell for cell in self.cells if cell.state == CELL_STATE.Eliminated])
+                    return str('Eliminated ' + str(post_eliminated - prior_eliminated) + ' additional cells for a total of ' + str(post_eliminated))
                         
-            post_eliminated = len([cell for cell in self.cells if cell.state == CELL_STATE.Eliminated])
-        
-            return str('Eliminated ' + str(post_eliminated - prior_eliminated) + ' additional cells for a total of ' + str(post_eliminated))
-        
-        else: #add non-eliminated things to retained.
-            if cell.color not in self.eliminated['colors']:
-                if cell.color not in self.retained['colors']:
-                    self.retained['colors'].append(cell.color)
-                for c in self.cells:
-                    if (c.color == cell.color) and (c.state != CELL_STATE.Eliminated):
-                        c.state = CELL_STATE.Retained
+            else: #add non-eliminated things to retained.
+                if trait not in self.eliminated[trait_desc]:
+                    if trait not in self.retained[trait_desc]:
+                        self.retained[trait_desc].append(trait)
+                    self.update_cells(trait, trait_desc, CELL_STATE.Retained)
+                post_retained = len([cell for cell in self.cells if cell.state == CELL_STATE.Retained])
+                return str('Retained ' + str(post_retained - prior_retained) + ' additional cells for a total of ' + str(post_retained))
+    
 
 class Game:
 
@@ -143,14 +162,14 @@ class Game:
             return a is cell
         
         
-        answer_true =  ((row == a.row) or 
+        guess_matches_traits =  ((row == a.row) or 
                         ((col - 1) == a.col) or 
                         (color == a.color ) or 
                         (shape == a.shape )
                         )
-        results = self.board.update_cell_statuses(cell,answer_true)
+        results = self.board.update_board_state(cell, guess_matches_traits)
         
-        return answer_true, results
+        return guess_matches_traits, results
         # ToDo: return richer results
     def guesses(self):
         return self._guesses
