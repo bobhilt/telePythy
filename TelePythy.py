@@ -25,6 +25,7 @@
 """
 
 from enum import Enum
+import csv
 
 CELL_STATE = Enum('CELL_STATE', 'Eliminated Retained Unknown Correct')
 
@@ -71,17 +72,18 @@ class Board:
     cells = list()
     
     with open('board_squares.csv') as f:
-        # board_reader = csv.reader(f, delimiter=',')
-        # for line in board_reader:
-        #     c = Cell(*line)
-        #     c.col = int(c.col)
-        #     cells.append(c) 
-        for line in f.readlines():
+        board_reader = csv.reader(f, delimiter=',')
+        # row letter,col number,color,shape
+        for line in board_reader:
             c = Cell(*line)
             c.col = int(c.col)
             cells.append(c) 
-
-    
+        # is csv import overkill vs just readlines()?
+        # for line in f.readlines():
+        #     c = Cell(line.split(','))
+        #     c.col=int(c.col)
+        #     cells.append(c)
+            
     def __init__(self):
         self._grid = [[[] for y in range(self._board_size)] for  x in range(self._board_size)]
         # Each cell will hold its state, and each trait will be tracked separetly
