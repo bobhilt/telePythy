@@ -105,16 +105,23 @@ class Board:
             elif trait_desc not in ('colors', 'shapes', 'rows', 'cols'):
                  raise AttributeError('Invalid trait_desc: ' + trait_desc)
                     
-    def update_board_state(self,cell, guess_matches_traits):
+    def update_board_state(self,cell, is_positive_guess):
 
         prior_eliminated = len([cell for cell in self.cells 
                                if cell.state == CELL_STATE.Eliminated])
 
         prior_retained = len([cell for cell in self.cells 
-                           if cell.state == CELL_STATE.Retained])
+                            if cell.state == CELL_STATE.Retained])
 
         for (trait, trait_desc) in [(cell.color, 'colors'), (cell.shape, 'shapes'), (cell.row, 'rows'), (cell.col, 'cols')]:
-            if not guess_matches_traits:
+            if is_positive_guess: # add non-eliminated things to retained.
+                if trait not in self.eliminated[trait_desc]:
+                    if trait not in self.retained[trait_desc]:
+                        self.retained[trait_desc].append(trait)
+                    self.update_cells(trait, trait_desc, CELL_STATE.Retained)
+                post_retained = len([cell for cell in self.cells if cell.state == CELL_STATE.Retained])
+                return str('Retained ' + str(post_retained - prior_retained) + ' additional cells for a total of ' + str(post_retained))
+            else: 
                 if trait not in self.eliminated[trait_desc]:
                     # add trait to eliminated list and set all relevant cell states to eliminated.
                     if trait in self.retained[trait_desc]:
@@ -124,14 +131,8 @@ class Board:
                     self.update_cells(trait, trait_desc, CELL_STATE.Eliminated)
                     post_eliminated = len([cell for cell in self.cells if cell.state == CELL_STATE.Eliminated])
                     return str('Eliminated ' + str(post_eliminated - prior_eliminated) + ' additional cells for a total of ' + str(post_eliminated))
-                        
-            else: #add non-eliminated things to retained.
-                if trait not in self.eliminated[trait_desc]:
-                    if trait not in self.retained[trait_desc]:
-                        self.retained[trait_desc].append(trait)
-                    self.update_cells(trait, trait_desc, CELL_STATE.Retained)
-                post_retained = len([cell for cell in self.cells if cell.state == CELL_STATE.Retained])
-                return str('Retained ' + str(post_retained - prior_retained) + ' additional cells for a total of ' + str(post_retained))
+                    # ToDo: this is not as helpful as it could be. Better to capture state after
+                    # each turn (list of state objects?), making it queryable.
     
 
 class Game:
@@ -141,9 +142,14 @@ class Game:
         self._answer = None
         self._guesses = list()
     
-    def get_cell_index(self, row, col):
-        return (ord(row) - ord('A')) * self.board.size() + (col - 1) # board columns are 1-based
-    
+    def _has_traits_in_common(self, cell_a, cell_b):
+        common_traits = ((cell_a.row == cell_b.row) or 
+                         (cell_a.col == cell_b.col) or 
+                         (cell_a.color == cell_b.color ) or 
+                         (cell_a.shape == cell_b.shape )
+                        )
+        return common_traits
+
     def _set_answer(self, row, col):
         if self._answer is not None:
             self._answer.state = CELL_STATE.Unknown
@@ -151,31 +157,25 @@ class Game:
         self._answer = self.board.cells[ndx]
         self.board.cells[ndx].state = CELL_STATE.Correct
 
-                        
-    def guess(self, row, col, color, shape, try_solve = False):
-        if self._answer is None:
-            # what to do here? Assign a random cell?
-            raise AttributeError('Cannot guess until answer is set')
-        ndx = self.get_cell_index(row, col)
+    def get_cell_index(self, row, col):
+        return (ord(row) - ord('A')) * self.board.size() + col # board columns are 0-based internally, 1-based visually
+    
+    def get_cell(self,row,col):
+        ndx = self.get_cell_index(row,col)
         cell = self.board.cells[ndx]
-        if (cell.color != color) or (cell.shape != shape):
-            raise ValueError('Error in cell values. Did you mean ' + cell.color + ' ' + cell.shape + '?')
+        return cell
 
-        a = self._answer # just to save typing
+    def guess(self, cell, try_solve = False):
+        if self._answer is None:
+            raise AttributeError('Cannot guess until answer is set')
+
         self._guesses.append(cell)
         if try_solve:
-            return a is cell
-        
-        
-        guess_matches_traits =  ((row == a.row) or 
-                        ((col - 1) == a.col) or 
-                        (color == a.color ) or 
-                        (shape == a.shape )
-                        )
-        results = self.board.update_board_state(cell, guess_matches_traits)
-        
-        return guess_matches_traits, results
-        # ToDo: return richer results
+            return self._answer is cell
+        affirmative_guess = self._has_traits_in_common(cell, self._answer)
+        results = self.board.update_board_state(cell, affirmative_guess)
+        return affirmative_guess,results
+
     def guesses(self):
         return self._guesses
     

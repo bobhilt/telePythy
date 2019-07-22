@@ -51,47 +51,40 @@ class TestGameStartup(unittest.TestCase):
         
     def test_set_answer_is_retreivable(self):
         game = t.Game()
-        game._set_answer('A',18) # A18 pink heart
+        game._set_answer('A',17) # A17 pink heart
         self.assertEqual(game._answer.col,17)
         self.assertEqual(game._answer.shape,game.board.shapes['heart'])
         
 class TestGamePlay(unittest.TestCase):
     def test_guess_with_matching_attributes_returns_true(self):
         game = t.Game()
-        game._set_answer('A',18) # A18 pink heart
-        self.assertEqual(game.guess('A',1,'blue','bolt')[0],True) # A
-        self.assertEqual(game.guess('D',18,'blue','circle')[0],True) # 18
-        self.assertEqual(game.guess('B',12,'pink','star')[0],True) # pink
-        self.assertEqual(game.guess('Q',8,'green','heart')[0],True) # heart
-        self.assertEqual(game.guess('R',6,'pink','heart')[0],True)   # another pink heart
+        game._set_answer('A',17) # A17 pink heart
+        self.assertEqual(game.guess(game.get_cell('A',  0))[0],True)  # blue bolt (matches 'A')
+        self.assertEqual(game.guess(game.get_cell('D', 17))[0],True) # blue circle (matches 18)
+        self.assertEqual(game.guess(game.get_cell('B', 11))[0],True) # pink star (matches pink)
+        self.assertEqual(game.guess(game.get_cell('Q',  7))[0],True)  # green heart (matches heart)
+        self.assertEqual(game.guess(game.get_cell('R',  5))[0],True)  # pink heart (matches pink, heart) 
 
     def test_guess_with_no_matching_attributes_returns_false(self):
         game = t.Game()
-        game._set_answer('A',18) # A18 pink heart
-        self.assertEqual(game.guess('K',3,'green','moon')[0],False)
-        self.assertEqual(game.guess('I',13,'orange','sun')[0],False)
-        self.assertEqual(game.guess('R',17,'purple','diamond')[0],False)
-        
-    def test_guess_with_inconsistent_values_rejected(self):
-        game = t.Game()
-        game._set_answer('A',18) # A18 pink heart
-        with self.assertRaises(ValueError):
-            game.guess('K',3,'green','star') # s/b green moon
-        
+        game._set_answer('A',17) # A17 pink heart
+        self.assertEqual(game.guess(game.get_cell('K',  3))[0],False) # K 3  Blue Diamond
+        self.assertEqual(game.guess(game.get_cell('I', 13))[0],False) # I 13 White Diamond
+        self.assertEqual(game.guess(game.get_cell('R', 10))[0],False) # R 17 Pink Heart
         
     def test_tracks_each_guess_in_order(self):
         game = t.Game()
-        game._set_answer('R',18) # R18 red sun
-        game.guess('A',1,'blue','bolt')
-        game.guess('B',12,'pink','star')
+        game._set_answer('R',17) # R17 red sun
+        game.guess(game.get_cell('A',0)) # blue bolt
+        game.guess(game.get_cell('B',11)) # pink star
         self.assertEqual(len(game.guesses()),2)
         self.assertEqual(game.guesses()[1].color, game.board.colors['pink'])
         
     def test_try_solve_compares_guess_to_set_answer(self):
         game = t.Game()
-        game._set_answer('R',18) # R18 red sun
-        self.assertTrue(game.guess('R',18,'red','sun',True))        
-        self.assertFalse(game.guess('R',6,'pink','heart', True))
+        game._set_answer('R',17) # R18 red sun
+        self.assertTrue(game.guess(game.get_cell('R',17),True))
+        self.assertFalse(game.guess(game.get_cell('R',5), True))
         
 # Render board
     def test_get_cell_data_returns_correct_values(self):
