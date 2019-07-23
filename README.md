@@ -8,7 +8,7 @@
 
 First to correctly solve their opponent's secret square wins. Incorrect attempt to solve result in a loss.
 
-Guessing player offers a single square as (Row, Column, Color, Shape), e..g, "B2 Green Heart.""
+Guessing player offers a single square as (Row, Column), e..g, "B2." In the board game, color and shape are part of the verbal guess to make it easier for the receiving player to evaluate, but no need in the online version.
 
 Response is either "Yes" (some attribute (row, column, color or shape) of the guess matches at least one of the secret square's attributes, or "No" (none of the attributes match).
 

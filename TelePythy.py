@@ -13,11 +13,11 @@
      - Randomly select target square
      - Render Board
      - Offer player a chance to guess or solve
-         - Entering in coordinates, fills out color and symbol, or
+         - Enters coordinates or
          - Click on square.
      - Compute results
-         - Add guess to guesses list.
-         - Compute Yes/No answer
+         - Add guess to guesses list. -Done
+         - Compute Yes/No answer - Done
          - Which squares are eliminated? (capture how many are eliminated with the guess, mark them)
          - Render Board
          - Provide Results
@@ -25,7 +25,7 @@
 """
 
 from enum import Enum
-import csv
+import copy
 
 CELL_STATE = Enum('CELL_STATE', 'Eliminated Retained Unknown Correct')
 
@@ -65,31 +65,31 @@ class Cell:
     def __repr__(self):
         return 'Cell(row="%s", col=%s, color="%s", shape="%s", state=%s)' % (self.row, self.col, self.color, self.shape, self.shape)        
 
+class Cells:
+    _cells = list() # singleton to be copied for each board instance.
+    with open('board_squares.csv') as f:
+        for line in f.readlines():
+            row, colstr, color, shape = line.strip().split(',')
+            col = int(colstr)
+            c = Cell(row, col, color, shape)
+            _cells.append(c)
+    def get_fresh_copy(self):
+        new_instance = copy.deepcopy(self._cells)
+        return new_instance
+    
+
+
 class Board:
     _board_size = 18 
     colors = Colors().colors
     shapes = Shapes().shapes
-    cells = list()
-    
-    with open('board_squares.csv') as f:
-        board_reader = csv.reader(f, delimiter=',')
-        # row letter,col number,color,shape
-        for line in board_reader:
-            c = Cell(*line)
-            c.col = int(c.col)
-            cells.append(c) 
-        # is csv import overkill vs just readlines()?
-        # for line in f.readlines():
-        #     c = Cell(line.split(','))
-        #     c.col=int(c.col)
-        #     cells.append(c)
-            
+    cells_master_instance = Cells()
     def __init__(self):
         self._grid = [[[] for y in range(self._board_size)] for  x in range(self._board_size)]
         # Each cell will hold its state, and each trait will be tracked separetly
         self.eliminated =  {'rows': [], 'cols': [], 'colors' : [], 'shapes': []}
         self.retained =  {'rows': [], 'cols': [], 'colors' : [], 'shapes': []}
-    
+        self.cells = self.cells_master_instance.get_fresh_copy()
     def size(self):
         return self._board_size
     
