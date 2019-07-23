@@ -107,20 +107,13 @@ class Board:
                     
     def update_board_state(self,cell, is_positive_guess):
 
-        prior_eliminated = len([cell for cell in self.cells 
-                               if cell.state == CELL_STATE.Eliminated])
-
-        prior_retained = len([cell for cell in self.cells 
-                            if cell.state == CELL_STATE.Retained])
-
+        
         for (trait, trait_desc) in [(cell.color, 'colors'), (cell.shape, 'shapes'), (cell.row, 'rows'), (cell.col, 'cols')]:
             if is_positive_guess: # add non-eliminated things to retained.
                 if trait not in self.eliminated[trait_desc]:
                     if trait not in self.retained[trait_desc]:
                         self.retained[trait_desc].append(trait)
                     self.update_cells(trait, trait_desc, CELL_STATE.Retained)
-                post_retained = len([cell for cell in self.cells if cell.state == CELL_STATE.Retained])
-                return str('Retained ' + str(post_retained - prior_retained) + ' additional cells for a total of ' + str(post_retained))
             else: 
                 if trait not in self.eliminated[trait_desc]:
                     # add trait to eliminated list and set all relevant cell states to eliminated.
@@ -129,10 +122,9 @@ class Board:
                     self.eliminated[trait_desc].append(trait)
                     
                     self.update_cells(trait, trait_desc, CELL_STATE.Eliminated)
-                    post_eliminated = len([cell for cell in self.cells if cell.state == CELL_STATE.Eliminated])
-                    return str('Eliminated ' + str(post_eliminated - prior_eliminated) + ' additional cells for a total of ' + str(post_eliminated))
-                    # ToDo: this is not as helpful as it could be. Better to capture state after
-                    # each turn (list of state objects?), making it queryable.
+        # post_eliminated = len([cell for cell in self.cells if cell.state == CELL_STATE.Eliminated])
+        # post_retained = len([cell for cell in self.cells if cell.state == CELL_STATE.Retained])
+        return (self.eliminated, self.retained)
     
 
 class Game:
@@ -141,6 +133,7 @@ class Game:
         self.board = Board()
         self._answer = None
         self._guesses = list()
+        self._results = list()
     
     def _has_traits_in_common(self, cell_a, cell_b):
         common_traits = ((cell_a.row == cell_b.row) or 
@@ -174,6 +167,7 @@ class Game:
             return self._answer is cell
         affirmative_guess = self._has_traits_in_common(cell, self._answer)
         results = self.board.update_board_state(cell, affirmative_guess)
+        self._results.append(results)
         return affirmative_guess,results
 
     def guesses(self):

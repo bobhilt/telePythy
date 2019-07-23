@@ -82,11 +82,18 @@ class TestGamePlay(unittest.TestCase):
         
     def test_try_solve_compares_guess_to_set_answer(self):
         game = t.Game()
-        game._set_answer('R',17) # R18 red sun
+        game._set_answer('R',17) # R17 red sun
         self.assertTrue(game.guess(game.get_cell('R',17),True))
         self.assertFalse(game.guess(game.get_cell('R',5), True))
-        
-# Render board
+
+    def test_guess_red_for_green_eliminates_red(self):
+        game = t.Game()
+        red = t.Colors().colors['red']
+        game._set_answer('D', 10) # green sun
+        game.guess(game.get_cell('R', 17)) # red sun
+        print(game._results)
+        self.assertTrue(red in game._results[0][1]['colors'])
+
     def test_get_cell_data_returns_correct_values(self):
         game = t.Game()
         self.assertEqual(game.get_cell_data(0),('blue', 'bolt',t.CELL_STATE.Unknown))
